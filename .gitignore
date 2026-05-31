@@ -1,0 +1,28 @@
+# Build output
+.gradle/
+build/
+out/
+bin/
+*.class
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Local test server (world data, logs, deployed plugin jar)
+run/
+
+# Secrets
+*.env
+*.local
+secrets/

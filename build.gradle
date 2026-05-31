@@ -1,0 +1,75 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '9.3.1'
+}
+
+group = maven_group
+version = mod_version
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(Integer.parseInt(java_version))
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'hytale-release'
+        url = uri('https://maven.hytale.com/release')
+    }
+}
+
+dependencies {
+    // Hytale server API, provided by the server at runtime.
+    compileOnly "com.hypixel.hytale:Server:${hytale_build}"
+
+    // Discord library, bundled into the plugin jar.
+    implementation "net.dv8tion:JDA:${jda_version}"
+
+    // YAML parser, used only to migrate a 1.5.1 config.yml to config.json on first run.
+    implementation "org.yaml:snakeyaml:2.3"
+
+    // No-op SLF4J backend so JDA does not warn about a missing logger (matches JDA's slf4j-api 2.0.x).
+    runtimeOnly "org.slf4j:slf4j-nop:2.0.17"
+}
+
+// Produce a single fat jar named discord-relay-<version>.jar.
+jar {
+    enabled = false
+}
+
+tasks.named('shadowJar') {
+    archiveClassifier.set('')
+    mergeServiceFiles()
+}
+
+tasks.named('build') {
+    dependsOn 'shadowJar'
+}
+
+// Builds the plugin, drops it in run/mods, and launches the installed Hytale server.
+// Override the install path with -Phytale_home=/path/to/Hytale if it is not the default.
+def gameLatest = "${project.findProperty('hytale_home') ?: System.getenv('HYTALE_HOME') ?: "${System.getProperty('user.home')}/AppData/Roaming/Hytale"}/install/release/package/game/latest"
+
+tasks.register('runServer', JavaExec) {
+    group = 'hytale'
+    description = 'Runs the installed Hytale server with this plugin loaded'
+    dependsOn 'shadowJar'
+    classpath = files("${gameLatest}/Server/HytaleServer.jar")
+    mainClass = 'com.hypixel.hytale.Main'
+    workingDir = file("$projectDir/run")
+    jvmArgs = ['-Xmx4G', '--enable-native-access=ALL-UNNAMED']
+    args = ['--allow-op', '--disable-sentry', "--assets=${gameLatest}/Assets.zip"]
+    standardInput = System.in
+    doFirst {
+        def modsDir = file("$projectDir/run/mods")
+        modsDir.mkdirs()
+        copy {
+            from tasks.named('shadowJar').get().archiveFile
+            into modsDir
+        }
+    }
+}

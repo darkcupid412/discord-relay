@@ -1,0 +1,16 @@
+{
+  "Group": "Discord",
+  "Name": "Relay",
+  "Version": "2.0.0",
+  "Description": "Two way bridge between a Hytale server and Discord: chat sync, player events, console commands, account linking, and stats.",
+  "Authors": [
+    {
+      "Name": "darkcupid412"
+    }
+  ],
+  "ServerVersion": "^0.5.0",
+  "Dependencies": {},
+  "OptionalDependencies": {},
+  "DisabledByDefault": false,
+  "Main": "com.darkcupid412.relay.RelayPlugin"
+}
