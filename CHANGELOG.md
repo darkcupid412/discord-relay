@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1
+
+### Fixed
+
+- The chat filter can block emoji again.
+
 ## 2.0.0
 
 First release for Hytale server 0.5.x, a full rebuild succeeding 1.5.1.

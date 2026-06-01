@@ -226,7 +226,7 @@ public final class RelayConfig {
         }
         if ("block".equalsIgnoreCase(orDefault(chatFilterMode, "censor"))) {
             for (String word : words) {
-                if (Pattern.compile("(?i)\\b" + Pattern.quote(word) + "\\b").matcher(message).find()) {
+                if (filterPattern(word).matcher(message).find()) {
                     return null;
                 }
             }
@@ -235,9 +235,19 @@ public final class RelayConfig {
         String replacement = Matcher.quoteReplacement(orDefault(chatFilterReplacement, "***"));
         String result = message;
         for (String word : words) {
-            result = result.replaceAll("(?i)\\b" + Pattern.quote(word) + "\\b", replacement);
+            result = filterPattern(word).matcher(result).replaceAll(replacement);
         }
         return result;
+    }
+
+    private static Pattern filterPattern(String word) {
+        String prefix = isWordChar(word.charAt(0)) ? "\\b" : "";
+        String suffix = isWordChar(word.charAt(word.length() - 1)) ? "\\b" : "";
+        return Pattern.compile("(?i)" + prefix + Pattern.quote(word) + suffix);
+    }
+
+    private static boolean isWordChar(char c) {
+        return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
     }
 
     private static String orDefault(String value, String fallback) {
