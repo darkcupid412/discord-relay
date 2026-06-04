@@ -436,7 +436,11 @@ public final class DiscordBot extends ListenerAdapter {
             return;
         }
         RelayConfig cfg = config.get();
-        String message = clamp(pickDeathFormat(cfg).replace("%message%", escapeMarkdown(deathMessage)), 1900);
+        String line = deathLine(pickDeathFormat(cfg), escapeMarkdown(deathMessage));
+        if (line == null) {
+            return;
+        }
+        String message = clamp(line, 1900);
         if (cfg.useDeathEmbed()) {
             sendEmbed(chatChannel, new EmbedBuilder().setColor(DEATH).setDescription(message).build(), message);
         } else {
@@ -444,12 +448,28 @@ public final class DiscordBot extends ListenerAdapter {
         }
     }
 
+    // JDA rejects an embed whose description trims to empty, which a blank format or an empty kill
+    // feed message would produce; fall back to the raw message, or skip when there is nothing to show.
+    static String deathLine(String format, String escapedMessage) {
+        String line = format.replace("%message%", escapedMessage);
+        if (line.isBlank()) {
+            line = escapedMessage;
+        }
+        return line.isBlank() ? null : line;
+    }
+
     private String pickDeathFormat(RelayConfig cfg) {
         String[] pool = cfg.getDeathMessages();
-        if (pool == null || pool.length == 0) {
-            return cfg.getDeathFormat();
+        if (pool != null && pool.length > 0) {
+            int start = ThreadLocalRandom.current().nextInt(pool.length);
+            for (int i = 0; i < pool.length; i++) {
+                String candidate = pool[(start + i) % pool.length];
+                if (candidate != null && !candidate.isBlank()) {
+                    return candidate;
+                }
+            }
         }
-        return pool[ThreadLocalRandom.current().nextInt(pool.length)];
+        return cfg.getDeathFormat();
     }
 
     public void sendServerStart() {

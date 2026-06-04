@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2
+
+### Fixed
+
+- Deaths with an empty kill feed message no longer crash the server.
+
 ## 2.0.1
 
 ### Fixed

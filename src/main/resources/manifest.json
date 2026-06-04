@@ -1,7 +1,7 @@
 {
   "Group": "Discord",
   "Name": "Relay",
-  "Version": "2.0.1",
+  "Version": "2.0.2",
   "Description": "Two way bridge between a Hytale server and Discord: chat sync, player events, console commands, account linking, and stats.",
   "Authors": [
     {
