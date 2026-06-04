@@ -476,11 +476,24 @@ public final class DiscordBot extends ListenerAdapter {
         if (chatChannel == null) {
             return;
         }
-        RelayConfig cfg = config.get();
-        if (cfg.useServerStatusEmbed()) {
-            sendEmbed(chatChannel, new EmbedBuilder().setColor(GREEN).setDescription(cfg.getServerStartFormat()).build(), cfg.getServerStartFormat());
+        // Posting the instant the gateway reports ready is the most fragile moment on a busy server: the
+        // first request can be lost while the connection settles, and the failure is silent. Wait a few
+        // seconds first (every other relay message is sent later, once stable, which is why they work).
+        HytaleServer.SCHEDULED_EXECUTOR.schedule(this::postServerStart, 5L, TimeUnit.SECONDS);
+    }
+
+    private void postServerStart() {
+        if (chatChannel == null || !isConnected()) {
+            return;
+        }
+        String message = config.get().getServerStartFormat();
+        if (config.get().useServerStatusEmbed()) {
+            chatChannel.sendMessageEmbeds(new EmbedBuilder().setColor(GREEN).setDescription(message).build()).queue(ok -> {}, err -> {
+                logger.atWarning().log("Server start embed failed, retrying as plain text: %s", err.getMessage());
+                chatChannel.sendMessage(message).queue(ok -> {}, err2 -> logger.atWarning().log("Could not send the server start message: %s", err2.getMessage()));
+            });
         } else {
-            chatChannel.sendMessage(cfg.getServerStartFormat()).queue();
+            chatChannel.sendMessage(message).queue(ok -> {}, err -> logger.atWarning().log("Could not send the server start message: %s", err.getMessage()));
         }
     }
 

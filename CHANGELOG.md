@@ -5,6 +5,7 @@
 ### Fixed
 
 - Deaths with an empty kill feed message no longer crash the server.
+- The "server started" message no longer intermittently fails to send on busy servers, and logs a warning if it ever cannot send.
 
 ## 2.0.1
 
